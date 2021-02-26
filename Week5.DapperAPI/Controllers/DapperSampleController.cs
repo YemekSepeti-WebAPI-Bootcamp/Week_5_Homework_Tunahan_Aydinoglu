@@ -128,6 +128,24 @@ namespace Week5.DapperAPI.Controllers
             return Ok();
         }
 
+        public IActionResult DapperSP()
+        {
+            /*
+                Databasede SelectTestPersons adinda bir StoredProcedure olusturdum ve Testperson tabloma select sorgusu atan bir procedure.
+                sql olarak procedure adimi yazdim ve dapper execute methoduna yolladim.
+                herhangi bir parametre girmedigim icin null gonderdi.
+                gonderdigim sqli dapperin StoredProcedure oldugunu anlamasi icin commentType propertisinde belirttim.
+                Sql tarafinda calisan komut : 
+                        exec dbo.SelectTestPersons
+             */
+
+            using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                string sql = "dbo.SelectTestPersons";
+                db.Execute(sql, null, commandType: CommandType.StoredProcedure);
+            }
+            return Ok();
+        }
 
     }
 }
