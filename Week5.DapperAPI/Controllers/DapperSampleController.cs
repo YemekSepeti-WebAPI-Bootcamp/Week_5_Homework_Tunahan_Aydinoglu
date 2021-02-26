@@ -197,7 +197,29 @@ namespace Week5.DapperAPI.Controllers
 
             return Ok();
         }
+        public IActionResult DapperOneToOne()
+        {
+            /*
+             sql sorgusunda inner join kullanarak iki tabloyu birbirine esleyecegimiz paremetleri belirttim.
+            querye eslenecek classlari type olarak gectim.
+            order ve employee tablolarini virtual ile birlestirdim.
+             */
+            using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                string sql = "select * from [Purchasing].[PurchaseOrderHeader] as Pur Inner Join [HumanResources].[Employee] as Emp ON Pur.EmployeeID = Emp.BusinessEntityID;";
 
+                var data = db.Query<OrderHeader, Employee, OrderHeader>(
+                        sql,
+                        (order, employee) =>
+                        {
+                            order.Employee = employee;
+                            return order;
+                        },
+                        splitOn: "EmployeeID"
+                        ).Distinct().ToList();
+                return Ok(data);
+            }
+        }
         public IActionResult DapperOneToMany()
         {
             /*
@@ -231,5 +253,9 @@ namespace Week5.DapperAPI.Controllers
                 return Ok(data);
             }
         }
+    
+    
+    
+    
     }
 }
