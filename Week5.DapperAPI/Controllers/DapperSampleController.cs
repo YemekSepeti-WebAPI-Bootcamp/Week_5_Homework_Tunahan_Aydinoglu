@@ -48,7 +48,6 @@ namespace Week5.DapperAPI.Controllers
             }
             return Ok(persons);
         }
-
         public IActionResult DapperInsert()
         {
             /*
@@ -72,7 +71,6 @@ namespace Week5.DapperAPI.Controllers
             }
             return Ok();
         }
-
         public IActionResult DapperUpdate()
         {
             /*
@@ -99,7 +97,6 @@ namespace Week5.DapperAPI.Controllers
 
             return Ok();
         }
-
         public IActionResult DapperDelete()
         {
             /*
@@ -119,7 +116,6 @@ namespace Week5.DapperAPI.Controllers
             }
             return Ok();
         }
-
         public IActionResult DapperDeleteInQuery()
         {
             /*
@@ -141,7 +137,6 @@ namespace Week5.DapperAPI.Controllers
 
             return Ok();
         }
-
         public IActionResult DapperSP()
         {
             /*
@@ -162,7 +157,6 @@ namespace Week5.DapperAPI.Controllers
             }
             return Ok();
         }
-
         public IActionResult DapperTransaction()
         {
             /*
@@ -287,6 +281,9 @@ namespace Week5.DapperAPI.Controllers
                 read ile typesafe okuma islemi gerceklestirip sorgu sonucunda bekledigimiz datalari yerlestiriyoruz.
                 bunun icin 2 adet model olusturup product modelinin icinde virtual list olarak ProductCostHistory modelini tutuyorum.
                 burdada ikinci sorgumun sonucunu product modelin icindeki listeye ekliyoruz.
+            sqlde calisan komut : 
+            exec sp_executesql N'select * from [Production].[Product] where ProductId = @ProductID;
+            Select * from [Production].[ProductCostHistory] where ProductId = @ProductID;',N'@ProductID int',@ProductID=711
              */
 
             using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
@@ -304,9 +301,6 @@ namespace Week5.DapperAPI.Controllers
             }
 
         }
-
-
-
 
     }
 }
