@@ -200,13 +200,14 @@ namespace Week5.DapperAPI.Controllers
         public IActionResult DapperResultMapping()
         {
             /*
-                sql sorgumuzu olurturdum.
+                sql sorgumuzu olusturdum.
                 dapperin queryfirtordefault methodunu kullanarak donen sonuclarin ilkini donus degeri olarak almis oldum.
                 sql tarafina giden komut :  select AddressLine1,City,PostalCode from [Person].[Address]
                     
              */
             using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
                 string sql = "select AddressLine1,City,PostalCode from [Person].[Address]";
 
                 var data = db.QueryFirstOrDefault(sql);
@@ -226,6 +227,7 @@ namespace Week5.DapperAPI.Controllers
              */
             using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
                 string sql = "select * from [Purchasing].[PurchaseOrderHeader] as Pur Inner Join [HumanResources].[Employee] as Emp ON Pur.EmployeeID = Emp.BusinessEntityID;";
 
                 var data = db.Query<OrderHeader, Employee, OrderHeader>(
@@ -252,6 +254,7 @@ namespace Week5.DapperAPI.Controllers
              */
             using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
                 string sql = "select * from [Production].[ProductCategory] as Cat Inner Join [Production].[ProductSubcategory] as Sub ON Cat.ProductCategoryID = Sub.ProductCategoryID;";
 
                 var categoryDictionary = new Dictionary<int, ProductCategory>();
@@ -275,8 +278,33 @@ namespace Week5.DapperAPI.Controllers
                 return Ok(data);
             }
         }
+        public IActionResult DapperMultipleQueryMapping()
+        {
+            /*
+                Multiple query methodu inner join islemleri gibi islemlerde kullanabilecegimiz bir method diyebilirim.
+                tek bir sorguda iki ayri tabloyu birlestirmek yerine iki ayri sorguyla datalari alip resultta joinliyoruz.
+                multiple icine sorgu sonuclarini aliyoruz;
+                read ile typesafe okuma islemi gerceklestirip sorgu sonucunda bekledigimiz datalari yerlestiriyoruz.
+                bunun icin 2 adet model olusturup product modelinin icinde virtual list olarak ProductCostHistory modelini tutuyorum.
+                burdada ikinci sorgumun sonucunu product modelin icindeki listeye ekliyoruz.
+             */
 
-      
+            using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                checkConnection(db);
+
+                string sql = @"select * from [Production].[Product] where ProductId = @ProductID; Select * from [Production].[ProductCostHistory] where ProductId = @ProductID;";
+                Product product;
+                using (var multiple = db.QueryMultiple(sql, new { ProductID = 711 }))
+                {
+                    product = multiple.Read<Product>().First();
+                    product.ProductCosts = multiple.Read<ProductCostHistory>().ToList();
+                }
+                return Ok(product);
+            }
+
+        }
+
 
 
 
