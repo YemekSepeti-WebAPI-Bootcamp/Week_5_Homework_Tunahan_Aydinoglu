@@ -50,17 +50,44 @@ namespace Week5.DapperAPI.Controllers
             TestPerson classımdan bir testData nesnesi oluşturdum.
             dapperın execute komutuna sql sorgumu ve parametre olarak nesnemi gönderdim ve dapper nesnemin parametleriyle sqldeki parametleri eşleyip 
             databasede insert işlemini gerçekleştirdi .
-            
+            sql tarafında çalışan komut : exec sp_executesql N'insert into dbo.TestPerson (Name, Surname) values (@Name, @Surname);',
+            N'@Name nvarchar(4000),@Surname nvarchar(4000)',@Name=N'Tunahan',@Surname=N'Aydinoglu'
              */
-            
+
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 string sql = @"insert into dbo.TestPerson (Name, Surname) values (@Name, @Surname);";
 
-                TestPerson testData = new TestPerson { Name = "Tuna", Surname = "Aydinoglu" };
+                TestPerson testData = new TestPerson { Name = "Tunahan", Surname = "Aydinoglu" };
                 var affected = db.Execute(sql, testData);
             }
                 return Ok();
+        }
+
+
+        public IActionResult DapperUpdate()
+        {
+            /*
+             yazdigimiz sql komutuyle update islemi hedefliyoruz şart olarak ıdsi gönderdiğimiz parametreyle eşleşen bir person varsa onun Name alanını 
+            bizim parametre olarak gönderdiğimiz name alanıyla güncellemesini istiyoruz.
+            Yine dapperın Execute methoduna yazdığımız sql sorgusunu ve parametrelerimizi gönderiyoruz.
+            Bu sefer many parameter yolladık birden çok parametre yolladığımız için dapper aynı komutu dizideki herbir eleman için tekrar tekrar çalıştırıyor.
+            Database tarafında çalışan komut örneği :              
+             exec sp_executesql N'Update dbo.TestPerson Set Name = @Name where Id=@Id ',N'@Id int,@Name nvarchar(4000)',@Id=2,@Name=N'Tun'
+             */
+            using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                string sql = @"Update dbo.TestPerson Set Name = @Name where Id=@Id ";
+
+                var updatePersons = new[] { 
+                    new {Id =1 , Name="Kerem"},
+                    new {Id=2 , Name="Tun"}
+                };
+
+                var affected = db.Execute(sql, updatePersons);
+            }
+
+            return Ok();
         }
 
 
