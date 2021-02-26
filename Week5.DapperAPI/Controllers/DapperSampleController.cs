@@ -22,7 +22,13 @@ namespace Week5.DapperAPI.Controllers
         {
             _configuration = configuration;
         }
-
+        public void checkConnection(IDbConnection db)
+        {
+            if (db.State != ConnectionState.Open)
+            {
+                db.Open();
+            }
+        }
         public IActionResult DapperSelect()
         {
             /*
@@ -34,6 +40,8 @@ namespace Week5.DapperAPI.Controllers
             IEnumerable<Person> persons;
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
+
                 string sql = "select * from [Person].[Person]";
 
                 persons = db.Query<Person>(sql);
@@ -56,6 +64,8 @@ namespace Week5.DapperAPI.Controllers
 
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
+
                 string sql = @"insert into dbo.TestPerson (Name, Surname) values (@Name, @Surname);";
 
                 TestPerson testData = new TestPerson { Name = "Tunahan", Surname = "Aydinoglu" };
@@ -77,6 +87,8 @@ namespace Week5.DapperAPI.Controllers
              */
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
+
                 string sql = @"Update dbo.TestPerson Set Name = @Name where Id=@Id ";
 
                 var updatePersons = new[] {
@@ -100,9 +112,11 @@ namespace Week5.DapperAPI.Controllers
              */
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
+                
                 string sql = @"Delete from dbo.TestPerson where Id=@Id";
                 var affected = db.Execute(sql,
-                    new {Id = 3}
+                    new { Id = 3 }
                 );
             }
             return Ok();
@@ -119,6 +133,8 @@ namespace Week5.DapperAPI.Controllers
             */
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
+               
                 string sql = @"Delete from dbo.TestPerson where Id=@Id";
                 var data = db.Query(sql,
                     new { Id = 4 }
@@ -141,9 +157,46 @@ namespace Week5.DapperAPI.Controllers
 
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
+                checkConnection(db);
+
                 string sql = "dbo.SelectTestPersons";
                 db.Execute(sql, null, commandType: CommandType.StoredProcedure);
             }
+            return Ok();
+        }
+        
+        public IActionResult DapperTransaction()
+        {
+            /*
+             Database'e birden cok islem yaptiracagimiz zaman ve bir islemde hata alinca digerlerininde kaydinin iptalinin gerekli oldugu durumlarda  
+            transaction kullanabiliriz.
+            burda sirayla iki adet insert islemi yaptik ve hatasiz calismalari durumunda transaction commit edilip kaydediliyor.
+            sql tarafina giden sorgularimiz : 
+             exec sp_executesql N'insert into dbo.TestPerson (Name,Surname) values (@Name,@Surname);',N'@Name nvarchar(4000),@Surname nvarchar(4000)',@Name=N'Deneme name',@Surname=N'Surname'
+             exec sp_executesql N'Insert into [Production].[ScrapReason] (Name, ModifiedDate) values (@Name, @ModifiedDate);',N'@ModifiedDate datetime,@Name nvarchar(4000)',@ModifiedDate='2021-02-26 17:
+             */
+
+            using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                checkConnection(db);
+
+                using (var transaction = db.BeginTransaction())
+                {
+
+                    string sql = @"insert into dbo.TestPerson (Name,Surname) values (@Name,@Surname);";
+
+                    TestPerson testPerson = new TestPerson { Name = "Deneme name", Surname = "Surname" };
+                    db.Execute(sql, testPerson, transaction);
+
+
+                    ScrapReason scrapReason = new ScrapReason { Name = "Scrap added", ModifiedDate = DateTime.Now };
+                    sql = @"Insert into [Production].[ScrapReason] (Name, ModifiedDate) values (@Name, @ModifiedDate);";
+
+                    db.Execute(sql, scrapReason, transaction);
+                    transaction.Commit();
+                }
+            }
+
             return Ok();
         }
 
