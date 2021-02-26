@@ -38,7 +38,7 @@ namespace Week5.DapperAPI.Controllers
 
                 persons = db.Query<Person>(sql);
             }
-                return Ok(persons);
+            return Ok(persons);
         }
 
 
@@ -61,7 +61,7 @@ namespace Week5.DapperAPI.Controllers
                 TestPerson testData = new TestPerson { Name = "Tunahan", Surname = "Aydinoglu" };
                 var affected = db.Execute(sql, testData);
             }
-                return Ok();
+            return Ok();
         }
 
 
@@ -79,12 +79,31 @@ namespace Week5.DapperAPI.Controllers
             {
                 string sql = @"Update dbo.TestPerson Set Name = @Name where Id=@Id ";
 
-                var updatePersons = new[] { 
+                var updatePersons = new[] {
                     new {Id =1 , Name="Kerem"},
                     new {Id=2 , Name="Tun"}
                 };
 
                 var affected = db.Execute(sql, updatePersons);
+            }
+
+            return Ok();
+        }
+
+        public IActionResult DapperDelete()
+        {
+            /*
+                delete sql komutumu yazdım  ve dapperın execute methoduna gonderiyoruz ve paremetre olarak beklediğimiz Id için bir obje
+            gönderiyoruz dapper bizim için databasede sorgumuzda gönderdiğimiz parametreleri eşliyor ve karşılığında buldu veri üzerinde sorugumuzda olan
+            delete komunutu çalıştırıyor.
+            sql tarafında çalışan sorgumuz : exec sp_executesql N'Delete from dbo.TestPerson where Id=@Id',N'@Id int',@Id=3
+             */
+            using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                string sql = @"Delete from dbo.TestPerson where Id=@Id";
+                var affected = db.Execute(sql,
+                    new {Id = 3}
+                );
             }
 
             return Ok();
