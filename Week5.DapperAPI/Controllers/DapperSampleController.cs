@@ -49,7 +49,6 @@ namespace Week5.DapperAPI.Controllers
             return Ok(persons);
         }
 
-
         public IActionResult DapperInsert()
         {
             /*
@@ -74,7 +73,6 @@ namespace Week5.DapperAPI.Controllers
             return Ok();
         }
 
-
         public IActionResult DapperUpdate()
         {
             /*
@@ -92,7 +90,7 @@ namespace Week5.DapperAPI.Controllers
                 string sql = @"Update dbo.TestPerson Set Name = @Name where Id=@Id ";
 
                 var updatePersons = new[] {
-                    new {Id =1 , Name="Kerem"},
+                    new {Id=1 , Name="Kerem"},
                     new {Id=2 , Name="Tun"}
                 };
 
@@ -191,8 +189,8 @@ namespace Week5.DapperAPI.Controllers
 
                     ScrapReason scrapReason = new ScrapReason { Name = "Scrap added", ModifiedDate = DateTime.Now };
                     sql = @"Insert into [Production].[ScrapReason] (Name, ModifiedDate) values (@Name, @ModifiedDate);";
-
                     db.Execute(sql, scrapReason, transaction);
+
                     transaction.Commit();
                 }
             }
@@ -200,5 +198,38 @@ namespace Week5.DapperAPI.Controllers
             return Ok();
         }
 
+        public IActionResult DapperOneToMany()
+        {
+            /*
+             One to many iliski kurabilmek icin inner join sql sorgusu yazdim.
+            categoryler ve subcategorileri beraber listeleyebilmek icin bir dictionary olusturdum.
+            queryde maplenmesini istedigimiz typeleri belirtip bir function icinde eslestirmeleri belirtip mapleme islemini tamamlamis oluyoruz.
+            cikan sonucu listeye cevirip return ediyoruz.
+             */
+            using(var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                string sql = "select * from [Production].[ProductCategory] as Cat Inner Join [Production].[ProductSubcategory] as Sub ON Cat.ProductCategoryID = Sub.ProductCategoryID;";
+
+                var categoryDictionary = new Dictionary<int, ProductCategory>();
+
+                var data = db.Query<ProductCategory, ProductSubcategory, ProductCategory>(sql,
+                    (category, subCategory) =>
+                    {
+                        ProductCategory categoryData;
+                        if (!categoryDictionary.TryGetValue(category.ProductCategoryID, out categoryData))
+                        {
+                            categoryData = category;
+                            categoryData.ProductSubcategories = new List<ProductSubcategory>();
+                            categoryDictionary.Add(categoryData.ProductCategoryID, categoryData);
+                        }
+                        categoryData.ProductSubcategories.Add(subCategory);
+                        return categoryData;
+                    },
+                    splitOn: "ProductSubcategoryID"
+                ).Distinct().ToList();
+
+                return Ok(data);
+            }
+        }
     }
 }
