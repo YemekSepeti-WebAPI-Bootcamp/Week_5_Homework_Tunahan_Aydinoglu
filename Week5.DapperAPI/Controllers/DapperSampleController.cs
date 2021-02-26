@@ -111,7 +111,7 @@ namespace Week5.DapperAPI.Controllers
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 checkConnection(db);
-                
+
                 string sql = @"Delete from dbo.TestPerson where Id=@Id";
                 var affected = db.Execute(sql,
                     new { Id = 3 }
@@ -132,7 +132,7 @@ namespace Week5.DapperAPI.Controllers
             using (IDbConnection db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 checkConnection(db);
-               
+
                 string sql = @"Delete from dbo.TestPerson where Id=@Id";
                 var data = db.Query(sql,
                     new { Id = 4 }
@@ -162,7 +162,7 @@ namespace Week5.DapperAPI.Controllers
             }
             return Ok();
         }
-        
+
         public IActionResult DapperTransaction()
         {
             /*
@@ -197,12 +197,32 @@ namespace Week5.DapperAPI.Controllers
 
             return Ok();
         }
+        public IActionResult DapperResultMapping()
+        {
+            /*
+                sql sorgumuzu olurturdum.
+                dapperin queryfirtordefault methodunu kullanarak donen sonuclarin ilkini donus degeri olarak almis oldum.
+                sql tarafina giden komut :  select AddressLine1,City,PostalCode from [Person].[Address]
+                    
+             */
+            using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            {
+                string sql = "select AddressLine1,City,PostalCode from [Person].[Address]";
+
+                var data = db.QueryFirstOrDefault(sql);
+
+                return Ok(data);
+            }
+
+        }
         public IActionResult DapperOneToOne()
         {
             /*
              sql sorgusunda inner join kullanarak iki tabloyu birbirine esleyecegimiz paremetleri belirttim.
             querye eslenecek classlari type olarak gectim.
             order ve employee tablolarini virtual ile birlestirdim.
+            sql tarafina giden komut : 
+                select * from [Purchasing].[PurchaseOrderHeader] as Pur Inner Join [HumanResources].[Employee] as Emp ON Pur.EmployeeID = Emp.BusinessEntityID;
              */
             using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
@@ -227,8 +247,10 @@ namespace Week5.DapperAPI.Controllers
             categoryler ve subcategorileri beraber listeleyebilmek icin bir dictionary olusturdum.
             queryde maplenmesini istedigimiz typeleri belirtip bir function icinde eslestirmeleri belirtip mapleme islemini tamamlamis oluyoruz.
             cikan sonucu listeye cevirip return ediyoruz.
+            sql tarafina giden komut : 
+                select * from [Production].[ProductCategory] as Cat Inner Join [Production].[ProductSubcategory] as Sub ON Cat.ProductCategoryID = Sub.ProductCategoryID;
              */
-            using(var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            using (var db = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
             {
                 string sql = "select * from [Production].[ProductCategory] as Cat Inner Join [Production].[ProductSubcategory] as Sub ON Cat.ProductCategoryID = Sub.ProductCategoryID;";
 
@@ -253,9 +275,10 @@ namespace Week5.DapperAPI.Controllers
                 return Ok(data);
             }
         }
-    
-    
-    
-    
+
+      
+
+
+
     }
 }
